@@ -61,6 +61,7 @@ Promise.all(
 );
 
 function getHouseAndPersonForDoor(doorId) {
+  console.log("getting house and person for door with id: " + JSON.stringify(doorId));
   return KnowledgeObject.retrieve(doorId).then((door) => {
     console.log('Door id', door.id);
     // Get the house of the door
@@ -79,6 +80,7 @@ function getHouseAndPersonForDoor(doorId) {
 }
 
 function createSecurityNotification(event) {
+  console.log("handling event: " + JSON.stringify(event));
   // Extract the door id from the event
   var doorId = event[0]['id'];
   getHouseAndPersonForDoor(doorId).then((objects) => {
@@ -100,6 +102,7 @@ function createSecurityNotification(event) {
 }
 
 function alertUser(event) {
+  console.log("handling event: " + JSON.stringify(event));
   var personId = event[0].toId;
   KnowledgeObject.retrieve(personId).then((person) => {
     console.log("Hey, " + person.attributes.name + " someone might be in your house!");
@@ -108,6 +111,7 @@ function alertUser(event) {
 }
 
 function checkType(event, type) {
+  console.log("handling event: " + JSON.stringify(event));
   // The condition:  return true if you're telling me about a Door, false
   // otherwise
   var eventType = event[0]['type'];

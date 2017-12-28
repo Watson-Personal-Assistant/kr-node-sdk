@@ -87,7 +87,7 @@ Agent.prototype.delete = function() {
   };
 
   var options = {
-    url: agent_url + 'subscription/' + this.id + '/' + this.event,
+    url: agent_url + 'subscription/' + this.id,
     method: 'DELETE',
     headers: headers,
   };
