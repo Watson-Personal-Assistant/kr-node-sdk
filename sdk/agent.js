@@ -83,7 +83,7 @@ class Agent {
     }
 
     const options = {
-      url: `${AGENT_URL}subsctiption/${this.id}/${this.event}`,
+      url: `${AGENT_URL}subsctiption/${this.id}`,
       method: 'DELETE',
       headers
     };
