@@ -3,143 +3,139 @@
 */
 
 const express = require('express');
-var bodyParser = require('body-parser');
-var request = require('request');
+const bodyParser = require('body-parser');
+const request = require('request');
 const app = express();
 
 app.use(bodyParser.json());
 
-var api_key = process.env.API_KEY;
-var agent_url = process.env.HUB_URL + 'agent/';
-var agentHost = process.env.AGENT_HOST;
+const API_KEY = process.env.API_KEY;
+const AGENT_URL = process.env.HUB_URL + 'agent/';
+const AGENT_HOST = process.env.AGENT_HOST;
 
-console.log('Agent host:  ' + agentHost);
+console.log(`Agent host: ${AGENT_HOST}`);
 
-var actions = {};
+let actions = {};
+let conditions = {};
 
-var conditions = {};
+const headers = {
+  'Content-type': 'application/json',
+  'api_key': API_KEY
+};
 
-function Agent(event, condition_method, action_method) {
-  this.event = event;
-  this.condition_method = condition_method;
-  this.action_method = action_method;
-}
+class Agent {
+  constructor(event, conditionMethod, actionMethod) {
+    this.event = event;
+    this.conditionMethod = conditionMethod;
+    this.actionMethod = actionMethod;
+  }
 
-/*
+  /*
   Agent subscription method.
   Event is a string and is one of:  "object-create", "object-update", "object-delete", "relation-create", "relation-delete"
-  condition_method is a function that returns a string 'true' or 'false' depending on whether the action should be called
-  action_method is the main function of the agent
- */
-Agent.prototype.subscribe = function() {
-  var post_data = {
-    'event': this.event,
-    'action': agentHost + "/action"
-  };
+  conditionMethod is a function that returns a string 'true' or 'false' depending on whether the action should be called
+  actionMethod is the main function of the agent
+  */
+  subscribe() {
+    const postData = {
+      'event': this.event,
+      'action': `${AGENT_HOST}/action`
+    };
 
-  if (this.condition_method) {
-    post_data['condition'] = agentHost + "/condition";
-  }
+    if (this.conditionMethod) {
+      postData.condition = `${AGENT_HOST}/condition`;
+    }
 
-  var headers = {
-    'Content-type': 'application/json',
-    'api_key': api_key
-  };
+    const options = {
+      url: `${AGENT_URL}register_eca_agent`,
+      method: 'POST',
+      headers,
+      json: postData
+    };
 
-  var options = {
-    url: agent_url + 'register_eca_agent',
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(post_data)
-  };
-
-  var self = this;
-  return new Promise(function (res, rej) {
-    request(options, function(err, response, body) {
-      if (err || response.statusCode !== 200) {
-        console.log('Error subscribing: ' + err + ' ' + body);
-        rej(body);
-      } else {
-        var id = JSON.parse(body)['id'];
-        actions[id] = self.action_method;
-        if (self.condition_method) {
-          conditions[id] = self.condition_method;
+    return new Promise((resolve, reject) => {
+      request(options, (err, response, body) => {
+        if (err || response.statusCode !== 200) {
+          console.log(`Error subscribing: ${err} ${body}`)
+          return reject(body);
         }
-        console.log('Created subscription to event', self.event, 'and received ID', id);
-        self.id = id;
-        res(body);
-      }
+
+        const id = body.id;
+        actions[id] = this.actionMethod;
+        if (this.conditionMethod) {
+          conditions[id] = this.conditionMethod;
+        };
+
+        console.log(`Created subscription to event ${this.event} and received ID ${id}`);
+        this.id = id;
+        return resolve(body);
+      });
     });
-  });
-};
-
-/* Agent deletion method
-
- */
-Agent.prototype.delete = function() {
-  if (!this.id) {
-    throw 'No id -- did you subscribe yet?';
-  }
-
-  var headers = {
-    'Content-type': 'application/json',
-    'api_key': api_key
   };
 
-  var options = {
-    url: agent_url + 'subscription/' + this.id + '/' + this.event,
-    method: 'DELETE',
-    headers: headers,
-  };
-
-  var self = this;
-  return new Promise(function (res, rej) {
-    request(options, function(err, response, body) {
-      if (err || response.statusCode !== 200) {
-        console.log('Error subscribing: ' + err + ' ' + body);
-        rej(body);
-      } else {
-        console.log('Deleted agent subscription', self.id);
-        res(body);
+  // Agent deletion method
+  delete() {
+    if (!this.id) {
+      throw {
+        name: 'MissingID',
+        message: 'No ID -- did you subscribe yet?'
       }
-    });
-  });
-};
+    }
 
+    const options = {
+      url: `${AGENT_URL}subsctiption/${this.id}`,
+      method: 'DELETE',
+      headers
+    };
+
+    return new Promise((resolve, reject) => {
+      request(options, (err, response, body) => {
+        if (err || response.statusCode !== 200) {
+          console.log(`Error subscribing: ${err} ${body}`);
+          return reject(body);
+        }
+
+        console.log(`Deleted agent subscription ${this.id}`);
+        return resolve(body);
+      });
+    });
+  };
+}
+
+// AGENT REST API Definiton
 // This is the route that will handle all the callbacks from the message broker
-app.post('/condition/:var', function (req, res) {
-  var subId = req.params['var'];
+app.post('/condition/:var', (req, res) => {
+  const subId = req.params.var;
   if (!(subId in conditions)) {
     res.status(400);
-    res.send('Bad subscription ID');
-  } else {
-    res.status(200);
-    var response = conditions[subId](req.body.results);
-
-    Promise.resolve(response).then((response) => {
-      res.send(response);
-    });
+    return res.send('Bad subscription ID');
   }
+
+  res.statusCode(200);
+  const response = conditions[subId](req.body.results);
+  Promise.resolve(response).then(result => {
+    return res.send(result);
+  });
 });
 
-app.post('/action/:var', function (req, res) {
-  var subId = req.params['var'];
+app.post('/action/:var', (req, res) => {
+  const subId = req.params.var;
   if (!(subId in actions)) {
     res.status(400);
-    res.send('Bad subscription ID');
-  } else {
-    res.status(200);
-    var response = actions[subId](req.body.results);
-    Promise.resolve(response).then((response) => {
-      res.send(response);
-    });
+    return res.send('Bad subscription ID');
   }
+
+  res.status(200);
+  const response = actions[subId](req.body.results);
+  Promise.resolve(response).then(result => {
+    return res.send(result);
+  });
 });
 
-var port = process.env.PORT || process.env.AGENT_PORT || 8080;
-
-app.listen(port, function () {
-  console.log('Agent REST service is alive!  Listening on port', process.env.AGENT_PORT, '\n\n');
+// Server Startup
+const port = process.env.PORT || process.env.AGENT_PORT || 8080;
+app.listen(port, () => {
+  console.log(`Agent REST service is alive!\nListening on port ${port}\n\n`)
 });
 
 module.exports = Agent;
