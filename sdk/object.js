@@ -44,7 +44,7 @@ class KnowledgeObject {
           return reject(body);
         }
 
-        const kObject = JSON.parse(body).result[0];
+        const kObject = JSON.parse(body).results[0];
         const type = kObject.type;
         const attributes = kObject.attributes;
 
