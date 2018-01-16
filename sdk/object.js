@@ -77,7 +77,7 @@ class KnowledgeObject {
           return reject(body);
         }
 
-        const objectsData = body.results;
+        const objectsData = JSON.parse(body).results;
         let objects = [];
         objectsData.forEach(objectData => {
           const type = objectData.type;
