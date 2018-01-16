@@ -44,7 +44,7 @@ class KnowledgeObject {
           return reject(body);
         }
 
-        const kObject = body.result[0];
+        const kObject = JSON.parse(body).result[0];
         const type = kObject.type;
         const attributes = kObject.attributes;
 
@@ -60,7 +60,7 @@ class KnowledgeObject {
    */
   relations(type, direction) {
     let options = {
-      url: `${KNOWLEDGE_URL}obejct/${this.id}/${direction}`,
+      url: `${KNOWLEDGE_URL}object/${this.id}/${direction}`,
       method: 'GET',
       headers
     }
