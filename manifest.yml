@@ -10,5 +10,4 @@ applications:
   env:
     HUB_URL: https://dev-sagan-hub.mybluemix.net/
     API_KEY: <api key>
-    AGENT_PORT: 8080
-    AGENT_HOST: kr-sdk-node.mybluemix.net
+    RULE_PORT: 8080

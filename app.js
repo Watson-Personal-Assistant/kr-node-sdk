@@ -4,7 +4,7 @@
 
 var KnowledgeObject = require('./sdk/object');
 var KnowledgeRelation = require('./sdk/relation');
-var Agent = require('./sdk/agent');
+var Agent = require('./sdk/messages');
 
 // Create objects in local memory
 
@@ -124,7 +124,7 @@ function checkType(event, type) {
 }
 
 var doorOpenAgent = new Agent('object-update',
-    function (event) {
+    function (event, callback) {
       var doorId = event[0]['id'];
       if (checkType(event, 'Door')) {
         return getHouseAndPersonForDoor(doorId).then((objects) => {
@@ -134,20 +134,20 @@ var doorOpenAgent = new Agent('object-update',
           var owner = objects[2];
           if (door.attributes.isOpen && (owner.attributes['longitude'] != house.attributes['longitude'] ||
               owner.attributes['latitude'] != house.attributes['latitude'])) {
-            return "True";
+            callback(true);
           } else {
-            return "False";
+            callback(false);
           }
         });
       } else {
-        return 'false';
+        callback(false);
       }
     },
     createSecurityNotification);
 
 var notificationAgent = new Agent('relation-create',
-    function (event) {
-      return checkType(event, 'notificationTarget') ? 'True' : 'False';
+    function (event, callback) {
+      callback(checkType(event, 'notificationTarget'));
     },
     alertUser);
 
@@ -170,9 +170,7 @@ function cleanup() {
       [
         person.delete(),
         house.delete(),
-        door.delete(),
-        notificationAgent.delete(),
-        doorOpenAgent.delete()
+        door.delete()
       ]);
 }
 
