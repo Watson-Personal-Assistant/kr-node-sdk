@@ -12,12 +12,12 @@ This is enabled by two core functionalities provided by the framework:
 
 The above are accessible at:
 
-1. https://personal-assistant-toolkit.mybluemix.net/agent/apidocs/?api_key= (Add your personal api_key to the address line)
+1. the publish/subscribe mechanism used is ibm message-hub: https://console.bluemix.net/catalog/services/message-hub
 2. https://personal-assistant-toolkit.mybluemix.net/knowledge/apidocs/?api_key= (Add your personal api_key to the address line)
 
 We call the modular insight components which use the publish subscribe and data store **Rules**.
 
-There are also input agents - code that updates the Knowledge store with data from external sources, i.e. not Expertise or Rules.
+There are also input agents - code that updates the Knowledge store with data from external sources, i.e. not Skills or Rules.
 
 ## Example Scenario (AKA: The door demo)
 
@@ -31,9 +31,11 @@ This scenario is implemented using the following:
 If so, this rule inserts a "SecurityAlert" object  into the common data store.
 3. **Notification Rule**: A rule that notifies a user when a relevant alert has been added to the data store.
 
-NOTE:  only (2) and (3) are represented as Agent objects in the example code, because (1) does not need to be an agent:  it does not listen for world model changes.
+NOTE:  only (2) and (3) are connected to the message-hub in the example code, because (1) does not need to listen for world model changes.
 
-The end to end flow is enabled by the rules communicating with each other through the shared data store and publish/subscribe mechanism. In the data store, two types of data can be stored: **Objects**, such as door, house, notification, person, and the **Relations** 
+NOTE2: in this example, all the components are within the same repository (for simplicity). in real scenario, you can split these components.
+
+The end to end flow is enabled by the rules communicating with each other through the shared data store and publish/subscribe mechanism. In the data store, two types of data can be stored: **Objects**, such as door, house, notification, person, and the **Relations**
 between these objects. Therefore the data model of the scenario must be defined in terms of these objects and relations.
 
 ### Scenario data model
@@ -42,10 +44,10 @@ The diagram below provides an overview of the data model, where the circles depi
 
 ![Object relation diagram](./DoorDemoObjectRelations.png)
 
-Note that some of the data (e.g., the status of the door) is stored as attributes within the objects. 
+Note that some of the data (e.g., the status of the door) is stored as attributes within the objects.
 
 #### Inserting the data for the sample scenario
-Prior to an open or close event, we want to make sure that the door, home, and person objects are present in the Sagan knowledge repository.  They will also need to be connected by the appropriate relations. 
+Prior to an open or close event, we want to make sure that the door, home, and person objects are present in the Sagan knowledge repository.  They will also need to be connected by the appropriate relations.
 
 ##### Creating the objects
 
@@ -59,7 +61,7 @@ Prior to an open or close event, we want to make sure that the door, home, and p
          "longitude": 67.99
        }
    );
-   
+
    var house = new KnowledgeObject('House',
        {
          "latitude": 12.345,
@@ -67,7 +69,7 @@ Prior to an open or close event, we want to make sure that the door, home, and p
          "name": "home"
        }
    );
-   
+
    var door = new KnowledgeObject('Door',
        {
          "isOpen": false,
@@ -115,21 +117,22 @@ Promise.all(
 
 ### The door sensor input agent
 
-While not a "proper" agent in this example, the sensor agent will simply change the status of the door from closed to open, which should trigger the other agents.  To do this, we will change the attribute in-memory and then update that change in the blackboard:
+While not a "proper" agent in this example, the sensor agent will simply change the status of the door from closed to open, which should trigger the rules.  To do this, we will change the attribute in-memory and then update that change in the blackboard:
 
 ```javascript
  door.attributes['isOpen'] = true;
  door.update();
 ```
 
-NOTE:  This code should not run until the agents specified below are created and subscribed to changes in the blackboard.  If you do this update before they are subscribed, they won't see the door change state!
+NOTE:  This code should not run until the rules specified below are created and subscribed to changes in the blackboard.  If you do this update before they are subscribed, they won't see the door change state!
 
 ### Door Alert Generation Rule
 
-In our system, agents are represented as rules.  Rules are Event-Condition-Action (ECA) triplets. Each time an Agent object is declared, it must have three parts:
-1. *A CRUD operation*:  A data change event in the blackboard at the create, delete, and update levels.  The current list is: object-create, object-update, object-delete, relation-create, relation-delete
+In our system, agents are represented as rules.  Rules are Event-Condition-Action (ECA) triplets. A rule should wait for an event in the data model to occur, and to do an action according to the change (most of the times, a condition check is made before the action, to act only when the event is relevant to the user).
+in this example, when creating the rules, we declare all the 3 parts, and save them inside an agent object -
+1. *A CRUD operation*:  The data change event in the blackboard at the create, delete, and update levels.  The current available list is: object-create, object-update, object-delete, relation-create, relation-delete
 2. *A condition function*:  A function that takes an event (an object or relation that was created, updated or deleted) and determines whether it is of interest to the agent.  If omitted, it is assumed that the agent is interested in all of the CRUD events specified.
-3. *An action*:  A function which carries out some action based on the event sent to the agent. 
+3. *An action*:  A function which carries out some action based on the event sent to the agent.
 
 The role of the Door Alert Generation Rule is to generate an alert whenever the door is opened and the owner is not an home. Therefore, this rule must carry out the following:
 
@@ -139,9 +142,9 @@ Therefore, this rule must subscribe to this topic:
 
 ```javascript
 var doorOpenAgent = new Agent('object-update',
-    function (event) {
+    function (event, callback) {
       ...
-      return checkType(event, 'Door');
+      callback(checkType(event, 'Door'));
       ...
     },
     createSecurityNotification);
@@ -170,7 +173,7 @@ The rule must now check whether the update is to the Door object and resulted in
       // but I'm lazy)
       KnowledgeObject.retrieve(doorId).then((door) => {
         console.log('Door id', door.id);
-        ... 
+        ...
       }
 ```
 
@@ -204,11 +207,13 @@ if (checkType(event, 'Door')) {
           var owner = objects[2];
           if (door.attributes.isOpen && (owner.attributes['longitude'] != house.attributes['longitude'] ||
               owner.attributes['latitude'] != house.attributes['latitude'])) {
-            return "True";
+            callback(true);
           } else {
-            return "False";
+            callback(false);
           }
         });
+      } else {
+        callback(false);
       }
 ```
 
@@ -221,8 +226,8 @@ The notification agent is going to be looking for creations of relations.  Why n
 Here is what the Agent object init looks like:
 ```javascript
 var notificationAgent = new Agent('relation-create',
-    function (event) {
-      return checkType(event, 'notificationTarget');
+    function (event, callback) {
+      callback(checkType(event, 'notificationTarget'));
     },
     alertUser);
 ```
