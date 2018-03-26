@@ -111,7 +111,7 @@ app.post('/condition/:var', (req, res) => {
     return res.send('Bad subscription ID');
   }
 
-  res.statusCode(200);
+  res.status(200);
   const response = conditions[subId](req.body.results);
   Promise.resolve(response).then(result => {
     return res.send(result);
