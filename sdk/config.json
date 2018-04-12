@@ -1,10 +1,5 @@
 {
   "MESSAGE_HUB": {
-    "instance_id": "REPLACE",
-    "mqlight_lookup_url": "REPLACE",
-    "api_key": "REPLACE",
-    "kafka_admin_url": "REPLACE",
-    "kafka_rest_url": "REPLACE",
     "kafka_brokers_sasl": [
       "REPLACE",
       "REPLACE"

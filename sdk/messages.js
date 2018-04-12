@@ -59,15 +59,15 @@ class Agent {
         });
         this.stream = stream;
 
-        stream.on('data', function(message) {
+        stream.on('data', function(kafka_message) {
             console.log('Got event');
-            var m = JSON.parse(message.value.toString());
-            console.log("event data: " + JSON.stringify(m["results"]));
-            agent.conditionMethod(m["results"], function(result) {
+            var event_data = JSON.parse(kafka_message.value.toString())["results"];
+            console.log("event data: " + JSON.stringify(event_data));
+            agent.conditionMethod(event_data, function(result) {
                 console.log("checking condition for the event");
                 if (result == true) {
                     console.log('Condition for the event was met. performing action');
-                    agent.actionMethod(m["results"]);
+                    agent.actionMethod(event_data);
                 } else {
                     console.log('Condition for the event was not met, action not performed')
                 }
@@ -77,9 +77,4 @@ class Agent {
     };
 }
 
-// Server Startup
-const port = process.env.PORT || process.env.RULE_PORT || 8080;
-app.listen(port, () => {
-    console.log(`Agent REST service is alive!\nListening on port ${port}\n\n`)
-});
 module.exports = Agent;
