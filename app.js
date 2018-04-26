@@ -154,11 +154,13 @@ var notificationAgent = new Agent('relation-create',
 function runAgents() {
   Promise.all(
       [
-        doorOpenAgent.subscribe(),
-        notificationAgent.subscribe()
+        doorOpenAgent.connect(),
+        notificationAgent.connect()
       ]
   ).then(function () {
-    console.log('Subscriptions created\n\n')
+    doorOpenAgent.subscribe();
+    notificationAgent.subscribe();
+    console.log('Subscriptions created\n\n');
     door.attributes['isOpen'] = true;
     door.update();
   }, cleanup); //cleanup if the sub fails
