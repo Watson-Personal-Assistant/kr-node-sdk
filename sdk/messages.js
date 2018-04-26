@@ -134,6 +134,11 @@ class Agent {
         });
 
     };
+
+    close() {
+        console.log("closing agent of event: " + this.event);
+        this.stream.destroy();
+    }
 }
 
 module.exports = Agent;
