@@ -4,7 +4,7 @@
 
 var KnowledgeObject = require('./sdk/object');
 var KnowledgeRelation = require('./sdk/relation');
-var Agent = require('./sdk/agent');
+var Agent = require('./sdk/messages');
 
 // Create objects in local memory
 
@@ -61,6 +61,7 @@ Promise.all(
 );
 
 function getHouseAndPersonForDoor(doorId) {
+  console.log("getting house and person for door with id: " + JSON.stringify(doorId));
   return KnowledgeObject.retrieve(doorId).then((door) => {
     console.log('Door id', door.id);
     // Get the house of the door
@@ -79,6 +80,7 @@ function getHouseAndPersonForDoor(doorId) {
 }
 
 function createSecurityNotification(event) {
+  console.log("handling event: " + JSON.stringify(event));
   // Extract the door id from the event
   var doorId = event[0]['id'];
   getHouseAndPersonForDoor(doorId).then((objects) => {
@@ -100,6 +102,7 @@ function createSecurityNotification(event) {
 }
 
 function alertUser(event) {
+  console.log("handling event: " + JSON.stringify(event));
   var personId = event[0].toId;
   KnowledgeObject.retrieve(personId).then((person) => {
     console.log("Hey, " + person.attributes.name + " someone might be in your house!");
@@ -108,6 +111,7 @@ function alertUser(event) {
 }
 
 function checkType(event, type) {
+  console.log("handling event: " + JSON.stringify(event));
   // The condition:  return true if you're telling me about a Door, false
   // otherwise
   var eventType = event[0]['type'];
@@ -120,7 +124,7 @@ function checkType(event, type) {
 }
 
 var doorOpenAgent = new Agent('object-update',
-    function (event) {
+    function (event, callback) {
       var doorId = event[0]['id'];
       if (checkType(event, 'Door')) {
         return getHouseAndPersonForDoor(doorId).then((objects) => {
@@ -130,31 +134,33 @@ var doorOpenAgent = new Agent('object-update',
           var owner = objects[2];
           if (door.attributes.isOpen && (owner.attributes['longitude'] != house.attributes['longitude'] ||
               owner.attributes['latitude'] != house.attributes['latitude'])) {
-            return "True";
+            callback(true);
           } else {
-            return "False";
+            callback(false);
           }
         });
       } else {
-        return 'false';
+        callback(false);
       }
     },
     createSecurityNotification);
 
 var notificationAgent = new Agent('relation-create',
-    function (event) {
-      return checkType(event, 'notificationTarget') ? 'True' : 'False';
+    function (event, callback) {
+      callback(checkType(event, 'notificationTarget'));
     },
     alertUser);
 
 function runAgents() {
   Promise.all(
       [
-        doorOpenAgent.subscribe(),
-        notificationAgent.subscribe()
+        doorOpenAgent.connect(),
+        notificationAgent.connect()
       ]
   ).then(function () {
-    console.log('Subscriptions created\n\n')
+    doorOpenAgent.subscribe();
+    notificationAgent.subscribe();
+    console.log('Subscriptions created\n\n');
     door.attributes['isOpen'] = true;
     door.update();
   }, cleanup); //cleanup if the sub fails
@@ -166,9 +172,7 @@ function cleanup() {
       [
         person.delete(),
         house.delete(),
-        door.delete(),
-        notificationAgent.delete(),
-        doorOpenAgent.delete()
+        door.delete()
       ]);
 }
 

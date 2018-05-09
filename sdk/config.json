@@ -1,0 +1,11 @@
+{
+  "MESSAGE_HUB": {
+    "kafka_brokers_sasl": [
+      "REPLACE",
+      "REPLACE"
+    ],
+    "user": "REPLACE",
+    "password": "REPLACE",
+    "local_ca_location": "SEE README"
+  }
+}

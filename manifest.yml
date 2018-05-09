@@ -4,11 +4,10 @@ applications:
   instances: 1
   command: node app.js
   domain: mybluemix.net
+  no-route: true
   name: kr-sdk-node
   host: kr-sdk-node
   disk_quota: 256M
   env:
     HUB_URL: https://dev-sagan-hub.mybluemix.net/
     API_KEY: <api key>
-    AGENT_PORT: 8080
-    AGENT_HOST: kr-sdk-node.mybluemix.net
