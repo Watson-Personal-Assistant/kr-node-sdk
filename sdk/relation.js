@@ -1,6 +1,6 @@
 /*
-© Copyright IBM Corp. 2017
-*/
+ © Copyright IBM Corp. 2017
+ */
 
 const request = require('request');
 
@@ -14,10 +14,10 @@ const headers = {
 
 class KnowledgeRelation {
   /**
-   * 
-   * @param {string} type 
-   * @param {Object} fromObject 
-   * @param {Object} toObject 
+   *
+   * @param {string} type
+   * @param {Object} fromObject
+   * @param {Object} toObject
    */
   constructor(type, fromObject, toObject) {
     if (!fromObject.id || !toObject.id) {
@@ -66,5 +66,5 @@ class KnowledgeRelation {
   };
 
 }
- 
+
 module.exports = KnowledgeRelation;
