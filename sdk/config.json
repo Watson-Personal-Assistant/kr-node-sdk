@@ -5,7 +5,6 @@
       "REPLACE"
     ],
     "user": "REPLACE",
-    "password": "REPLACE",
-    "local_ca_location": "SEE README"
+    "password": "REPLACE"
   }
 }

@@ -1,6 +1,6 @@
 /*
-© Copyright IBM Corp. 2017
-*/
+ © Copyright IBM Corp. 2017
+ */
 
 const request = require('request');
 
@@ -14,10 +14,10 @@ const headers = {
 
 class KnowledgeObject {
   /**
-   * 
-   * @param {string} type 
-   * @param {Object} attributes 
-   * @param {string} id 
+   *
+   * @param {string} type
+   * @param {Object} attributes
+   * @param {string} id
    */
   constructor(type, attributes, id) {
     this.type = type;
@@ -28,8 +28,8 @@ class KnowledgeObject {
   }
 
   /**
-   * 
-   * @param {string} objectId 
+   *
+   * @param {string} objectId
    */
   static retrieve(objectId) {
     const options = {
@@ -54,9 +54,9 @@ class KnowledgeObject {
   };
 
   /**
-   * 
-   * @param {string} type 
-   * @param {string} direction 
+   *
+   * @param {string} type
+   * @param {string} direction
    */
   relations(type, direction) {
     let options = {
@@ -91,24 +91,24 @@ class KnowledgeObject {
   };
 
   /**
-   * 
-   * @param {string} type 
+   *
+   * @param {string} type
    */
   in (type) {
     return this.relations(type, 'in');
   };
 
   /**
-   * 
-   * @param {string} type 
+   *
+   * @param {string} type
    */
   out(type) {
     return this.relations(type, 'out');
   };
 
   /**
-   * 
-   * @param {string} type 
+   *
+   * @param {string} type
    */
   both(type) {
     return this.relations(type, 'both');
