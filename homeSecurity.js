@@ -13,11 +13,11 @@ app.use(bodyParser.json());
 var KnowledgeObject = require('./sdk/object');
 var KnowledgeRelation = require('./sdk/relation');
 
-// Create objects in local memory
+// Create objects in local memory.
 
 var person = new KnowledgeObject('Person',
   {
-    'name': 'TestBen',
+    'name': 'John',
     "latitude": 12.456,
     "longitude": 67.99
   }
@@ -38,8 +38,8 @@ var door = new KnowledgeObject('Door',
   }
 );
 
-// Save them to the world model
-Promise.all(
+// Save the objects to the world model.
+ Promise.all(
   [
     person.create(),
     house.create(),
@@ -49,11 +49,11 @@ Promise.all(
   function (results) {
     console.log('All objects created\n\n');
 
-    // Create relations in local memory
+    // Create relations in local memory.
     var personToHouse = new KnowledgeRelation('ownership', person, house);
     var houseToDoor = new KnowledgeRelation('has-as-part', house, door);
 
-    // Save them to the world model
+    // Save relationships to the world model.
     Promise.all(
       [
         personToHouse.create(),
@@ -67,7 +67,7 @@ Promise.all(
   }
 );
 
-// create the agents using the conditions and actions
+// Create the agents to connect to the Message Hub and subscribe to events.
 var doorOpenAgent = new Agent('object-update',
   conditions.main,
   actions.main);
@@ -81,8 +81,8 @@ function runAgent() {
   }, cleanup); //cleanup if the sub fails
 }
 
-// Delete objects from the world model
-function cleanup() {
+  // Delete objects from the world model.
+  function cleanup() {
   Promise.all(
     [
       person.delete(),
@@ -91,6 +91,7 @@ function cleanup() {
     ]);
 }
 
+// Open the door.
 app.get('/openDoor', function (req, res) {
   KnowledgeObject.retrieve(door.id).then((doorObj) => {
     if (!doorObj.attributes.isOpen) {
@@ -105,6 +106,7 @@ app.get('/openDoor', function (req, res) {
   });
 });
 
+//Close the door
 app.get('/closeDoor', function (req, res) {
   KnowledgeObject.retrieve(door.id).then((doorObj) => {
     if (doorObj.attributes.isOpen) {
