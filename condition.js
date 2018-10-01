@@ -1,6 +1,7 @@
 require('dotenv').config({path: __dirname + '/.env'});
 var KnowledgeObject = require('./sdk/object');
 var KnowledgeRelation = require('./sdk/relation');
+
 // Rule condition
 function getHouseAndPersonForDoor(doorId) {
   console.log('in getHouseAndPersonForDoor');
@@ -25,7 +26,7 @@ function getHouseAndPersonForDoor(doorId) {
     console.log('Error: ' + err);
   });
 }
-// Check that the update event is on a door
+// Check that the update event is on a door.
 function checkType(event, type) {
   var eventType = event[0]['type'];
   if (eventType == type) {
@@ -35,7 +36,7 @@ function checkType(event, type) {
   }
 }
 
-// check is owner away
+// check is owner away.
 function main(event, callback) {
   console.log('in condition main');
   var doorId = event[0]['id'];
