@@ -137,8 +137,11 @@ class KnowledgeObject {
 
     return new Promise((resolve, reject) => {
       request(options, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
-          console.log(`Error creating object (status code ${response.statusCode}: ${err} ${body}`);
+        if (err || (response && response.statusCode !== 200)) {
+          console.log(`Error creating object ${err} ${body}`);
+          if (response.statusCode) {
+              console.log(`Status code ${response.statusCode}`);
+          }
           return reject(body);
         }
 
@@ -177,8 +180,11 @@ class KnowledgeObject {
 
     return new Promise((resolve, reject) => {
       request(options, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
-          console.log(`Error updating object (status code ${response.statusCode}: ${err} ${body}`);
+        if (err || (response && response.statusCode !== 200)) {
+          console.log(`Error creating object ${err} ${body}`);
+          if (response.statusCode) {
+              console.log(`Status code ${response.statusCode}`);
+          }
           return reject(body);
         }
 
@@ -204,8 +210,11 @@ class KnowledgeObject {
 
     return new Promise((resolve, reject) => {
       request(options, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
-          console.log(`Error deleting object: ${err} ${body}`);
+        if (err || (response && response.statusCode !== 200)) {
+          console.log(`Error creating object ${err} ${body}`);
+          if (response.statusCode) {
+              console.log(`Status code ${response.statusCode}`);
+          }
           return reject(body);
         }
         console.log(`Object ${this.id}(${this.type}) deleted`);
