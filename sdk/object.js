@@ -40,7 +40,7 @@ class KnowledgeObject {
 
     return new Promise((resolve, reject) => {
       request(options, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (err || (response && response.statusCode !== 200)) {
           return reject(body);
         }
 
@@ -73,7 +73,7 @@ class KnowledgeObject {
 
     return new Promise((resolve, reject) => {
       request(options, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
+        if (err || (response && response.statusCode !== 200)) {
           return reject(body);
         }
 
