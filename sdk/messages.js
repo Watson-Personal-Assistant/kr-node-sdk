@@ -12,7 +12,6 @@ app.use(bodyParser.json());
 require('dotenv').config();
 
 var Kafka = require('node-rdkafka');
-var config = require('./config.json');
 
 var api_key = process.env.API_KEY;
 var knowledge_url = process.env.HUB_URL;
@@ -22,35 +21,6 @@ class Agent {
     this.event = event;
     this.conditionMethod = conditionMethod;
     this.actionMethod = actionMethod;
-
-    // optional - save the message hub credentials in the configuration file
-
-    /*
-    // Config common options
-    var driver_options = {
-      //'debug': 'all',
-      'metadata.broker.list': config.MESSAGE_HUB.kafka_brokers_sasl,
-      'security.protocol': 'sasl_ssl',
-      //'ssl.ca.location': '/etc/ssl/certs', // this is the default location in bluemix
-      'sasl.mechanisms': 'PLAIN',
-      'sasl.username': config.MESSAGE_HUB.user,
-      'sasl.password': config.MESSAGE_HUB.password,
-      'api.version.request': true,
-      'broker.version.fallback': '0.10.2.1'
-    };
-
-    var consumer_opts = {
-      'client.id': 'kafka-nodejs-console-sample-consumer',
-      'group.id': 'kafka-nodejs-console-sample-group'
-    };
-
-    // Add the common options to client
-    for (var key in driver_options) {
-      consumer_opts[key] = driver_options[key];
-    }
-
-    this.connection_options = consumer_opts;
-    */
   }
 
   connect() {
@@ -68,7 +38,7 @@ class Agent {
 
     return new Promise(function (res, rej) {
       request(options, function (err, response, body) {
-        if (err || response.statusCode !== 200) {
+        if (err || (response && response.statusCode !== 200)) {
           console.log("error:" + body);
           rej(body);
         } else {
